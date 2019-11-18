@@ -1,6 +1,6 @@
-from prometheus_client import start_http_server, Gauge
+from prometheus_client import start_http_server, Gauge # type: ignore
 from subprocess import Popen, PIPE
-
+from typing import Dict
 
 def get_deviceinfo(name):
     """
@@ -397,7 +397,7 @@ busy = Gauge(
 )
 
 # start with an empty deviceinfo dict
-deviceinfo = {}
+deviceinfo: Dict[str, dict] = {}
 
 start_http_server(9248)
 while True:
