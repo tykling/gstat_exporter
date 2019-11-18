@@ -113,28 +113,28 @@ def process_request() -> None:
 
             deviceinfo[name].update({"name": name})
 
-            queue.labels(**deviceinfo).set(queue_depth)
-            totalops.labels(**deviceinfo).set(total_operations_per_second)
+            queue.labels(**deviceinfo[name]).set(queue_depth)
+            totalops.labels(**deviceinfo[name]).set(total_operations_per_second)
 
-            readops.labels(**deviceinfo).set(read_operations_per_second)
-            readsize.labels(**deviceinfo).set(read_size_kilobytes)
-            readkbs.labels(**deviceinfo).set(read_kilobytes_per_second)
-            readms.labels(**deviceinfo).set(miliseconds_per_read)
+            readops.labels(**deviceinfo[name]).set(read_operations_per_second)
+            readsize.labels(**deviceinfo[name]).set(read_size_kilobytes)
+            readkbs.labels(**deviceinfo[name]).set(read_kilobytes_per_second)
+            readms.labels(**deviceinfo[name]).set(miliseconds_per_read)
 
-            writeops.labels(**deviceinfo).set(write_operations_per_second)
-            writesize.labels(**deviceinfo).set(write_size_kilobytes)
-            writekbs.labels(**deviceinfo).set(write_kilobytes_per_second)
-            writems.labels(**deviceinfo).set(miliseconds_per_write)
+            writeops.labels(**deviceinfo[name]).set(write_operations_per_second)
+            writesize.labels(**deviceinfo[name]).set(write_size_kilobytes)
+            writekbs.labels(**deviceinfo[name]).set(write_kilobytes_per_second)
+            writems.labels(**deviceinfo[name]).set(miliseconds_per_write)
 
-            deleteops.labels(**deviceinfo).set(delete_operations_per_second)
-            deletesize.labels(**deviceinfo).set(delete_size_kilobytes)
-            deletekbs.labels(**deviceinfo).set(delete_kilobytes_per_second)
-            deletems.labels(**deviceinfo).set(miliseconds_per_delete)
+            deleteops.labels(**deviceinfo[name]).set(delete_operations_per_second)
+            deletesize.labels(**deviceinfo[name]).set(delete_size_kilobytes)
+            deletekbs.labels(**deviceinfo[name]).set(delete_kilobytes_per_second)
+            deletems.labels(**deviceinfo[name]).set(miliseconds_per_delete)
 
-            otherops.labels(**deviceinfo).set(other_operations_per_second)
-            otherms.labels(**deviceinfo).set(miliseconds_per_other)
+            otherops.labels(**deviceinfo[name]).set(other_operations_per_second)
+            otherms.labels(**deviceinfo[name]).set(miliseconds_per_other)
 
-            busy.labels(**deviceinfo).set(percent_busy)
+            busy.labels(**deviceinfo[name]).set(percent_busy)
 
 
 # define metrics
