@@ -153,7 +153,7 @@ queue = Gauge(
 )
 totalops = Gauge(
     "gstat_total_operations_per_second",
-    "The total number operations for this GEOM",
+    "The total number of operations/second for this GEOM",
     [
         "name",
         "descr",
@@ -169,7 +169,7 @@ totalops = Gauge(
 
 readops = Gauge(
     "gstat_read_operations_per_second",
-    "The number of read operations per second for this GEOM",
+    "The number of read operations/second for this GEOM",
     [
         "name",
         "descr",
@@ -199,7 +199,7 @@ readsize = Gauge(
 )
 readkbs = Gauge(
     "gstat_read_kilobytes_per_second",
-    "The speed in kilobytes per second of read operations for this GEOM",
+    "The speed in kilobytes/second of read operations for this GEOM",
     [
         "name",
         "descr",
@@ -214,7 +214,7 @@ readkbs = Gauge(
 )
 readms = Gauge(
     "gstat_miliseconds_per_read",
-    "The speed in miliseconds per read operation for this GEOM",
+    "The speed in miliseconds/read operation for this GEOM",
     [
         "name",
         "descr",
@@ -230,7 +230,7 @@ readms = Gauge(
 
 writeops = Gauge(
     "gstat_write_operations_per_second",
-    "The number of write operations per second for this GEOM",
+    "The number of write operations/second for this GEOM",
     [
         "name",
         "descr",
@@ -260,7 +260,7 @@ writesize = Gauge(
 )
 writekbs = Gauge(
     "gstat_write_kilobytes_per_second",
-    "The speed in kilobytes per second of write operations for this GEOM",
+    "The speed in kilobytes/second of write operations for this GEOM",
     [
         "name",
         "descr",
@@ -275,7 +275,7 @@ writekbs = Gauge(
 )
 writems = Gauge(
     "gstat_miliseconds_per_write",
-    "The speed in miliseconds per write operation for this GEOM",
+    "The speed in miliseconds/write operation for this GEOM",
     [
         "name",
         "descr",
@@ -291,7 +291,7 @@ writems = Gauge(
 
 deleteops = Gauge(
     "gstat_delete_operations_per_second",
-    "The number of delete operations per second for this GEOM",
+    "The number of delete operations/second for this GEOM",
     [
         "name",
         "descr",
@@ -321,7 +321,7 @@ deletesize = Gauge(
 )
 deletekbs = Gauge(
     "gstat_delete_kilobytes_per_second",
-    "The speed in kilobytes per second of delete operations for this GEOM",
+    "The speed in kilobytes/second of delete operations for this GEOM",
     [
         "name",
         "descr",
@@ -336,7 +336,7 @@ deletekbs = Gauge(
 )
 deletems = Gauge(
     "gstat_miliseconds_per_delete",
-    "The speed in miliseconds per delete operation for this GEOM",
+    "The speed in miliseconds/delete operation for this GEOM",
     [
         "name",
         "descr",
@@ -352,7 +352,7 @@ deletems = Gauge(
 
 otherops = Gauge(
     "gstat_other_operations_per_second",
-    "The number of other operations (BIO_FLUSH) per second for this GEOM",
+    "The number of other operations (BIO_FLUSH)/second for this GEOM",
     [
         "name",
         "descr",
@@ -367,7 +367,7 @@ otherops = Gauge(
 )
 otherms = Gauge(
     "gstat_miliseconds_per_other",
-    "The speed in miliseconds per other operation (BIO_FLUSH) for this GEOM",
+    "The speed in miliseconds/other operation (BIO_FLUSH) for this GEOM",
     [
         "name",
         "descr",
