@@ -113,6 +113,9 @@ def process_request() -> None:
 
             deviceinfo[name].update({"name": name})
 
+            # up is always.. up
+            up.set(1)
+
             queue.labels(**deviceinfo[name]).set(queue_depth)
             totalops.labels(**deviceinfo[name]).set(total_operations_per_second)
 
@@ -138,6 +141,10 @@ def process_request() -> None:
 
 
 # define metrics
+up = Gauge(
+    "gstat_up", "The value of this Gauge is always 1 when the gstat_exporter is up"
+)
+
 queue = Gauge(
     "gstat_queue_depth",
     "The queue depth for this GEOM",
