@@ -1,8 +1,9 @@
-from prometheus_client import start_http_server, Gauge # type: ignore
+from prometheus_client import start_http_server, Gauge  # type: ignore
 from subprocess import Popen, PIPE
 from typing import Dict
 
-def get_deviceinfo(name):
+
+def get_deviceinfo(name: str) -> Dict[str, str]:
     """
     Return a dict of GEOM device info for GEOM devices in class DISK,
     for use as labels for the metrics.
@@ -55,7 +56,7 @@ def get_deviceinfo(name):
         return result
 
 
-def process_request():
+def process_request() -> None:
     """
     Run gstat in a loop and update stats per line
     """
@@ -397,7 +398,7 @@ busy = Gauge(
 )
 
 # start with an empty deviceinfo dict
-deviceinfo: Dict[str, dict] = {}
+deviceinfo: Dict[str, Dict[str, str]] = {}
 
 start_http_server(9248)
 while True:
