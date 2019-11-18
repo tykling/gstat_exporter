@@ -60,7 +60,9 @@ def process_request() -> None:
     """
     Run gstat in a loop and update stats per line
     """
-    global deviceinfo
+    # start with an empty deviceinfo dict and add devices as we see them
+    deviceinfo: Dict[str, Dict[str, str]] = {}
+
     with Popen(
         ["gstat", "-pdosCI", "5s"], stdout=PIPE, bufsize=1, universal_newlines=True
     ) as p:
@@ -91,6 +93,7 @@ def process_request() -> None:
                 continue
 
             if name not in deviceinfo:
+                # this is the first time we see this GEOM
                 deviceinfo[name] = {}
                 # we always need a value for all labels
                 for key in [
@@ -105,34 +108,33 @@ def process_request() -> None:
                     "fwheads",
                 ]:
                     deviceinfo[name][key] = ""
-                # get info from the device if it is class DISK
+                # get real info from the device if it is class DISK
                 deviceinfo[name].update(get_deviceinfo(name))
 
-            labels = deviceinfo[name]
-            labels.update({"name": name})
+            deviceinfo[name].update({"name": name})
 
-            queue.labels(**labels).set(queue_depth)
-            totalops.labels(**labels).set(total_operations_per_second)
+            queue.labels(**deviceinfo).set(queue_depth)
+            totalops.labels(**deviceinfo).set(total_operations_per_second)
 
-            readops.labels(**labels).set(read_operations_per_second)
-            readsize.labels(**labels).set(read_size_kilobytes)
-            readkbs.labels(**labels).set(read_kilobytes_per_second)
-            readms.labels(**labels).set(miliseconds_per_read)
+            readops.labels(**deviceinfo).set(read_operations_per_second)
+            readsize.labels(**deviceinfo).set(read_size_kilobytes)
+            readkbs.labels(**deviceinfo).set(read_kilobytes_per_second)
+            readms.labels(**deviceinfo).set(miliseconds_per_read)
 
-            writeops.labels(**labels).set(write_operations_per_second)
-            writesize.labels(**labels).set(write_size_kilobytes)
-            writekbs.labels(**labels).set(write_kilobytes_per_second)
-            writems.labels(**labels).set(miliseconds_per_write)
+            writeops.labels(**deviceinfo).set(write_operations_per_second)
+            writesize.labels(**deviceinfo).set(write_size_kilobytes)
+            writekbs.labels(**deviceinfo).set(write_kilobytes_per_second)
+            writems.labels(**deviceinfo).set(miliseconds_per_write)
 
-            deleteops.labels(**labels).set(delete_operations_per_second)
-            deletesize.labels(**labels).set(delete_size_kilobytes)
-            deletekbs.labels(**labels).set(delete_kilobytes_per_second)
-            deletems.labels(**labels).set(miliseconds_per_delete)
+            deleteops.labels(**deviceinfo).set(delete_operations_per_second)
+            deletesize.labels(**deviceinfo).set(delete_size_kilobytes)
+            deletekbs.labels(**deviceinfo).set(delete_kilobytes_per_second)
+            deletems.labels(**deviceinfo).set(miliseconds_per_delete)
 
-            otherops.labels(**labels).set(other_operations_per_second)
-            otherms.labels(**labels).set(miliseconds_per_other)
+            otherops.labels(**deviceinfo).set(other_operations_per_second)
+            otherms.labels(**deviceinfo).set(miliseconds_per_other)
 
-            busy.labels(**labels).set(percent_busy)
+            busy.labels(**deviceinfo).set(percent_busy)
 
 
 # define metrics
@@ -396,9 +398,6 @@ busy = Gauge(
         "fwheads",
     ],
 )
-
-# start with an empty deviceinfo dict
-deviceinfo: Dict[str, Dict[str, str]] = {}
 
 start_http_server(9248)
 while True:
