@@ -192,34 +192,34 @@ class GstatExporter:
         with Popen(
             ["gstat", "-pdosCI", "5s"], stdout=PIPE, bufsize=1, universal_newlines=True
         ) as p:
-            if p.stdout is not None:
-                # loop over lines in the output
-                for line in p.stdout:
-                    (
-                        timestamp,
-                        name,
-                        queue_depth,
-                        total_operations_per_second,
-                        read_operations_per_second,
-                        read_size_kilobytes,
-                        read_kilobytes_per_second,
-                        miliseconds_per_read,
-                        write_operations_per_second,
-                        write_size_kilobytes,
-                        write_kilobytes_per_second,
-                        miliseconds_per_write,
-                        delete_operations_per_second,
-                        delete_size_kilobytes,
-                        delete_kilobytes_per_second,
-                        miliseconds_per_delete,
-                        other_operations_per_second,
-                        miliseconds_per_other,
-                        percent_busy,
-                    ) = line.split(",")
-                    if timestamp == "timestamp":
-                        # skip header line
-                        continue
+            # loop over lines in the output
+            for line in p.stdout:  # type: ignore
+                (
+                    timestamp,
+                    name,
+                    queue_depth,
+                    total_operations_per_second,
+                    read_operations_per_second,
+                    read_size_kilobytes,
+                    read_kilobytes_per_second,
+                    miliseconds_per_read,
+                    write_operations_per_second,
+                    write_size_kilobytes,
+                    write_kilobytes_per_second,
+                    miliseconds_per_write,
+                    delete_operations_per_second,
+                    delete_size_kilobytes,
+                    delete_kilobytes_per_second,
+                    miliseconds_per_delete,
+                    other_operations_per_second,
+                    miliseconds_per_other,
+                    percent_busy,
+                ) = line.split(",")
+                if timestamp == "timestamp":
+                    # skip header line
+                    continue
 
+                # first check if this GEOM has been seen before
                 if name not in self.deviceinfo:
                     # this is the first time we see this GEOM
                     self.deviceinfo[name] = {}
@@ -230,12 +230,12 @@ class GstatExporter:
                     self.deviceinfo[name].update(self.get_deviceinfo(name))
                     self.deviceinfo[name].update({"name": name})
 
-                # update timestamp to track when this device was last seen
+                # update timestamp to track when this GEOM was last seen
                 self.timestamps[name] = datetime.datetime.strptime(
                     timestamp.split(".")[0], "%Y-%m-%d %H:%M:%S"
                 )
 
-                # check for removed devices
+                # check for removed GEOMs
                 now = datetime.datetime.now()
                 if (now - self.lastcheck).seconds > 60:
                     # enough time has passed since the last check
