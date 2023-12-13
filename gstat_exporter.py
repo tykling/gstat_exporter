@@ -1,5 +1,6 @@
 from prometheus_client import start_http_server, Gauge
 import argparse
+import logging
 import datetime
 from subprocess import Popen, PIPE
 from typing import Dict
@@ -12,10 +13,16 @@ except PackageNotFoundError:
     # package is not installed, version unknown
     __version__ = "0.0.0"
 
+logging.info(f"Starting gstat_exporter v{__version__}")
+
 
 class GstatExporter:
     def __init__(self) -> None:
-        """Define metrics."""
+        """Define metrics and other neccesary variables."""
+        # save the version as a class attribute
+        self.__version__ = __version__
+
+        # define the metric labels
         self.labels: list[str] = [
             "name",
             "descr",
@@ -28,6 +35,7 @@ class GstatExporter:
             "fwheads",
         ]
 
+        # define the metrics
         self.metrics: dict[str, Gauge] = {}
         self.metrics["up"] = Gauge(
             "gstat_up",
@@ -132,6 +140,8 @@ class GstatExporter:
         self.lastcheck = datetime.datetime.now()
         self.timestamps: Dict[str, datetime.datetime] = {}
 
+        logging.debug("Done initialising GstatExporter class")
+
     def get_deviceinfo(self, name: str) -> Dict[str, str]:
         """
         Return a dict of GEOM device info for GEOM devices in class DISK,
@@ -155,40 +165,42 @@ class GstatExporter:
            fwheads: 16
         $
         """
+        logging.debug(f"Getting deviceinfo for GEOM {name}...")
         with Popen(
             ["geom", "-p", name], stdout=PIPE, bufsize=1, universal_newlines=True
         ) as p:
             result = {}
-            if p.stdout is not None:
-                for line in p.stdout:
-                    # remove excess whitespace
-                    line = line.strip()
-                    # we only care about the DISK class for now
-                    if line[0:12] == "Geom class: " and line[-4:] != "DISK":
-                        break
+            for line in p.stdout:  # type: ignore
+                # remove excess whitespace
+                line = line.strip()
+                # we only care about the DISK class for now
+                if line[0:12] == "Geom class: " and line[-4:] != "DISK":
+                    break
 
-                    if line[0:11] == "Mediasize: ":
-                        result["mediasize"] = line[11:]
-                    if line[0:12] == "Sectorsize: ":
-                        result["sectorsize"] = line.split(" ")[1]
-                    if line[0:7] == "descr: ":
-                        result["descr"] = " ".join(line.split(" ")[1:])
-                    if line[0:7] == "lunid: ":
-                        result["lunid"] = line.split(" ")[1]
-                    if line[0:7] == "ident: ":
-                        result["ident"] = line.split(" ")[1]
-                    if line[0:14] == "rotationrate: ":
-                        result["rotationrate"] = line.split(" ")[1]
-                    if line[0:11] == "fwsectors: ":
-                        result["fwsectors"] = line.split(" ")[1]
-                    if line[0:9] == "fwheads: ":
-                        result["fwheads"] = line.split(" ")[1]
+                if line[0:11] == "Mediasize: ":
+                    result["mediasize"] = line[11:]
+                if line[0:12] == "Sectorsize: ":
+                    result["sectorsize"] = line.split(" ")[1]
+                if line[0:7] == "descr: ":
+                    result["descr"] = " ".join(line.split(" ")[1:])
+                if line[0:7] == "lunid: ":
+                    result["lunid"] = line.split(" ")[1]
+                if line[0:7] == "ident: ":
+                    result["ident"] = line.split(" ")[1]
+                if line[0:14] == "rotationrate: ":
+                    result["rotationrate"] = line.split(" ")[1]
+                if line[0:11] == "fwsectors: ":
+                    result["fwsectors"] = line.split(" ")[1]
+                if line[0:9] == "fwheads: ":
+                    result["fwheads"] = line.split(" ")[1]
+            logging.debug(f"Returning deviceinfo for {name}: {result}")
             return result
 
     def run_gstat_forever(self) -> None:
         """
         Run gstat in a loop and update stats per line
         """
+        logging.debug("Running 'gstat -pdosCI 5s' (will loop forever)...")
         with Popen(
             ["gstat", "-pdosCI", "5s"], stdout=PIPE, bufsize=1, universal_newlines=True
         ) as p:
@@ -221,6 +233,7 @@ class GstatExporter:
 
                 # first check if this GEOM has been seen before
                 if name not in self.deviceinfo:
+                    logging.info(f"Adding new GEOM to deviceinfo: {name}")
                     # this is the first time we see this GEOM
                     self.deviceinfo[name] = {}
                     # we always need a value for all labels
@@ -238,15 +251,20 @@ class GstatExporter:
                 # check for removed GEOMs
                 now = datetime.datetime.now()
                 if (now - self.lastcheck).seconds > 60:
+                    logging.debug("Running periodic check for removed devices...")
                     # enough time has passed since the last check
                     # loop over devices and check timestamp for each
                     for name in self.deviceinfo.keys():
-                        if (now - self.timestamps[name]).seconds > 60:
+                        delta = (now - self.timestamps[name]).seconds
+                        if delta > 60:
                             # it has been too long since we have seen this device, remove it
+                            logging.info(
+                                "It has been {delta} seconds since gstat last reported data for GEOM {name} - removing metrics"
+                            )
                             for metric in self.metrics.keys():
                                 if metric == "up":
                                     continue
-                                self.metrics[metric].remove(**self.deviceinfo[name])
+                                self.metrics[metric].remove(*self.deviceinfo[name])
                             del self.deviceinfo[name]
                     self.lastcheck = datetime.datetime.now()
 
@@ -325,6 +343,7 @@ def main() -> None:
         default=9248,
     )
     args = parser.parse_args()
+    logging.info(f"Starting listener on address '{args.listen_ip}' port '{args.port}'")
     start_http_server(addr=args.listen_ip, port=args.port)
     exporter = GstatExporter()
     while True:
