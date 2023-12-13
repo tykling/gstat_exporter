@@ -33,3 +33,6 @@ dev = ["twine == 4.0.2", "pre-commit == 3.5.0", "setuptools-scm == 8.0.4", "buil
 
 [project.urls]
 homepage = "https://github.com/tykling/gstat_exporter"
+
+[tool.setuptools_scm]
+version_file = "_version.py"
