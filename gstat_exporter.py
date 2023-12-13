@@ -1,4 +1,5 @@
 from prometheus_client import start_http_server, Gauge
+import argparse
 from subprocess import Popen, PIPE
 from typing import Dict
 from importlib.metadata import PackageNotFoundError, version
@@ -247,6 +248,30 @@ busy = Gauge(
     labels,
 )
 
-start_http_server(9248)
-while True:
-    process_request()
+
+def main() -> None:
+    """Run the main function."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-l",
+        "--listen-ip",
+        type=str,
+        help="Listen IP. Defaults to 0.0.0.0 (all v4 IPs). Set to :: to listen on all v6 IPs.",
+        default="0.0.0.0",
+    )
+    parser.add_argument(
+        "-p",
+        "--port",
+        type=int,
+        help="Portnumber. Defaults to 9248.",
+        default=9248,
+    )
+    args = parser.parse_args()
+    print(args)
+    start_http_server(addr=args.listen_ip, port=args.port)
+    while True:
+        process_request()
+
+
+if __name__ == "__main__":
+    main()

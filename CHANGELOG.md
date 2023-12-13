@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Added argparse and commandline arguments -p and -l to make listen ip and listen port configurable
+
 ### Changed
 - Replace black + flake8 linters with ruff
 
