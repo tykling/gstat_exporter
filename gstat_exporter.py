@@ -17,8 +17,12 @@ logging.info(f"Starting gstat_exporter v{__version__}")
 
 
 class GstatExporter:
-    def __init__(self) -> None:
+    def __init__(self, interval: int = 30, grace: int = 30) -> None:
         """Define metrics and other neccesary variables."""
+        # save interval and grace
+        self.interval = interval
+        self.grace = grace
+
         # save the version as a class attribute
         self.__version__ = __version__
 
@@ -306,18 +310,19 @@ class GstatExporter:
 
                 # check for removed GEOMs
                 now = datetime.datetime.now()
-                if (now - self.lastcheck).seconds > 60:
+                if (now - self.lastcheck).seconds > self.interval:
                     logging.debug("Running periodic check for removed devices...")
                     # enough time has passed since the last check
                     # loop over devices and check timestamp for each
                     remove = []
                     for name in self.deviceinfo.keys():
                         delta = (now - self.timestamps[name]).seconds
-                        if delta > 60:
+                        if delta > self.grace:
                             remove.append(name)
                             logging.info(
-                                f"It has been {delta} seconds since gstat last reported data for GEOM {name} - removing metrics"
+                                f"It has been {self.grace} seconds since gstat last reported data for GEOM {name} - removing metrics"
                             )
+
                     # loop over GEOMs gstat stopped giving data for and remove them
                     for name in remove:
                         # it has been too long since we have seen this device, remove it
@@ -333,6 +338,20 @@ class GstatExporter:
 def main() -> None:
     """Run the main function."""
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-g",
+        "--grace",
+        type=int,
+        help="Stop exporting metrics for a GEOM after gstat has not reported data from it for this many seconds. Defaults to 30 seconds.",
+        default=30,
+    )
+    parser.add_argument(
+        "-i",
+        "--interval",
+        type=int,
+        help="How many seconds to wait between checking for removed devices. Defaults to 30 seconds.",
+        default=30,
+    )
     parser.add_argument(
         "-l",
         "--listen-ip",
@@ -350,7 +369,7 @@ def main() -> None:
     args = parser.parse_args()
     logging.info(f"Starting listener on address '{args.listen_ip}' port '{args.port}'")
     start_http_server(addr=args.listen_ip, port=args.port)
-    exporter = GstatExporter()
+    exporter = GstatExporter(interval=args.interval, grace=args.grace)
     while True:
         exporter.run_gstat_forever()
 
