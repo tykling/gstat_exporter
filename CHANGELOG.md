@@ -10,9 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added argparse and commandline arguments -p and -l to make listen ip and listen port configurable
+- Added feature to remove devices when they disappear from the system
 
 ### Changed
 - Replace black + flake8 linters with ruff
+- Refactor code into a GstatExporter class
 
 
 ## [v0.1.0] - 2023-12-13
