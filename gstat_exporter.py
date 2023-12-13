@@ -254,17 +254,18 @@ class GstatExporter:
                     logging.debug("Running periodic check for removed devices...")
                     # enough time has passed since the last check
                     # loop over devices and check timestamp for each
-                    for name in self.deviceinfo.keys():
+                    devices = self.deviceinfo.keys()
+                    for name in devices:
                         delta = (now - self.timestamps[name]).seconds
                         if delta > 60:
                             # it has been too long since we have seen this device, remove it
                             logging.info(
-                                "It has been {delta} seconds since gstat last reported data for GEOM {name} - removing metrics"
+                                f"It has been {delta} seconds since gstat last reported data for GEOM {name} - removing metrics"
                             )
                             for metric in self.metrics.keys():
                                 if metric == "up":
                                     continue
-                                self.metrics[metric].remove(*self.deviceinfo[name])
+                                self.metrics[metric].remove(*self.deviceinfo[name].values())
                             del self.deviceinfo[name]
                     self.lastcheck = datetime.datetime.now()
 
