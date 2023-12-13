@@ -1,4 +1,4 @@
-from prometheus_client import start_http_server, Gauge  # type: ignore
+from prometheus_client import start_http_server, Gauge
 from subprocess import Popen, PIPE
 from typing import Dict
 from importlib.metadata import PackageNotFoundError, version
@@ -38,29 +38,30 @@ def get_deviceinfo(name: str) -> Dict[str, str]:
         ["geom", "-p", name], stdout=PIPE, bufsize=1, universal_newlines=True
     ) as p:
         result = {}
-        for line in p.stdout:
-            # remove excess whitespace
-            line = line.strip()
-            # we only care about the DISK class for now
-            if line[0:12] == "Geom class: " and line[-4:] != "DISK":
-                break
+        if p.stdout is not None:
+            for line in p.stdout:
+                # remove excess whitespace
+                line = line.strip()
+                # we only care about the DISK class for now
+                if line[0:12] == "Geom class: " and line[-4:] != "DISK":
+                    break
 
-            if line[0:11] == "Mediasize: ":
-                result["mediasize"] = line[11:]
-            if line[0:12] == "Sectorsize: ":
-                result["sectorsize"] = line.split(" ")[1]
-            if line[0:7] == "descr: ":
-                result["descr"] = " ".join(line.split(" ")[1:])
-            if line[0:7] == "lunid: ":
-                result["lunid"] = line.split(" ")[1]
-            if line[0:7] == "ident: ":
-                result["ident"] = line.split(" ")[1]
-            if line[0:14] == "rotationrate: ":
-                result["rotationrate"] = line.split(" ")[1]
-            if line[0:11] == "fwsectors: ":
-                result["fwsectors"] = line.split(" ")[1]
-            if line[0:9] == "fwheads: ":
-                result["fwheads"] = line.split(" ")[1]
+                if line[0:11] == "Mediasize: ":
+                    result["mediasize"] = line[11:]
+                if line[0:12] == "Sectorsize: ":
+                    result["sectorsize"] = line.split(" ")[1]
+                if line[0:7] == "descr: ":
+                    result["descr"] = " ".join(line.split(" ")[1:])
+                if line[0:7] == "lunid: ":
+                    result["lunid"] = line.split(" ")[1]
+                if line[0:7] == "ident: ":
+                    result["ident"] = line.split(" ")[1]
+                if line[0:14] == "rotationrate: ":
+                    result["rotationrate"] = line.split(" ")[1]
+                if line[0:11] == "fwsectors: ":
+                    result["fwsectors"] = line.split(" ")[1]
+                if line[0:9] == "fwheads: ":
+                    result["fwheads"] = line.split(" ")[1]
         return result
 
 
@@ -74,78 +75,79 @@ def process_request() -> None:
     with Popen(
         ["gstat", "-pdosCI", "5s"], stdout=PIPE, bufsize=1, universal_newlines=True
     ) as p:
-        for line in p.stdout:
-            (
-                timestamp,
-                name,
-                queue_depth,
-                total_operations_per_second,
-                read_operations_per_second,
-                read_size_kilobytes,
-                read_kilobytes_per_second,
-                miliseconds_per_read,
-                write_operations_per_second,
-                write_size_kilobytes,
-                write_kilobytes_per_second,
-                miliseconds_per_write,
-                delete_operations_per_second,
-                delete_size_kilobytes,
-                delete_kilobytes_per_second,
-                miliseconds_per_delete,
-                other_operations_per_second,
-                miliseconds_per_other,
-                percent_busy,
-            ) = line.split(",")
-            if timestamp == "timestamp":
-                # skip header line
-                continue
+        if p.stdout is not None:
+            for line in p.stdout:
+                (
+                    timestamp,
+                    name,
+                    queue_depth,
+                    total_operations_per_second,
+                    read_operations_per_second,
+                    read_size_kilobytes,
+                    read_kilobytes_per_second,
+                    miliseconds_per_read,
+                    write_operations_per_second,
+                    write_size_kilobytes,
+                    write_kilobytes_per_second,
+                    miliseconds_per_write,
+                    delete_operations_per_second,
+                    delete_size_kilobytes,
+                    delete_kilobytes_per_second,
+                    miliseconds_per_delete,
+                    other_operations_per_second,
+                    miliseconds_per_other,
+                    percent_busy,
+                ) = line.split(",")
+                if timestamp == "timestamp":
+                    # skip header line
+                    continue
 
-            if name not in deviceinfo:
-                # this is the first time we see this GEOM
-                deviceinfo[name] = {}
-                # we always need a value for all labels
-                for key in [
-                    "name",
-                    "descr",
-                    "mediasize",
-                    "sectorsize",
-                    "lunid",
-                    "ident",
-                    "rotationrate",
-                    "fwsectors",
-                    "fwheads",
-                ]:
-                    deviceinfo[name][key] = ""
-                # get real info from the device if it is class DISK
-                deviceinfo[name].update(get_deviceinfo(name))
+                if name not in deviceinfo:
+                    # this is the first time we see this GEOM
+                    deviceinfo[name] = {}
+                    # we always need a value for all labels
+                    for key in [
+                        "name",
+                        "descr",
+                        "mediasize",
+                        "sectorsize",
+                        "lunid",
+                        "ident",
+                        "rotationrate",
+                        "fwsectors",
+                        "fwheads",
+                    ]:
+                        deviceinfo[name][key] = ""
+                    # get real info from the device if it is class DISK
+                    deviceinfo[name].update(get_deviceinfo(name))
 
-            deviceinfo[name].update({"name": name})
+                deviceinfo[name].update({"name": name})
 
-            # up is always.. up
-            up.set(1)
+                # up is always.. up
+                up.set(1)
 
-            queue.labels(**deviceinfo[name]).set(queue_depth)
-            totalops.labels(**deviceinfo[name]).set(total_operations_per_second)
+                queue.labels(**deviceinfo[name]).set(queue_depth)
+                totalops.labels(**deviceinfo[name]).set(total_operations_per_second)
 
-            readops.labels(**deviceinfo[name]).set(read_operations_per_second)
-            readsize.labels(**deviceinfo[name]).set(read_size_kilobytes)
-            readkbs.labels(**deviceinfo[name]).set(read_kilobytes_per_second)
-            readms.labels(**deviceinfo[name]).set(miliseconds_per_read)
+                readops.labels(**deviceinfo[name]).set(read_operations_per_second)
+                readsize.labels(**deviceinfo[name]).set(read_size_kilobytes)
+                readkbs.labels(**deviceinfo[name]).set(read_kilobytes_per_second)
+                readms.labels(**deviceinfo[name]).set(miliseconds_per_read)
 
-            writeops.labels(**deviceinfo[name]).set(write_operations_per_second)
-            writesize.labels(**deviceinfo[name]).set(write_size_kilobytes)
-            writekbs.labels(**deviceinfo[name]).set(write_kilobytes_per_second)
-            writems.labels(**deviceinfo[name]).set(miliseconds_per_write)
+                writeops.labels(**deviceinfo[name]).set(write_operations_per_second)
+                writesize.labels(**deviceinfo[name]).set(write_size_kilobytes)
+                writekbs.labels(**deviceinfo[name]).set(write_kilobytes_per_second)
+                writems.labels(**deviceinfo[name]).set(miliseconds_per_write)
 
-            deleteops.labels(**deviceinfo[name]).set(delete_operations_per_second)
-            deletesize.labels(**deviceinfo[name]).set(delete_size_kilobytes)
-            deletekbs.labels(**deviceinfo[name]).set(delete_kilobytes_per_second)
-            deletems.labels(**deviceinfo[name]).set(miliseconds_per_delete)
+                deleteops.labels(**deviceinfo[name]).set(delete_operations_per_second)
+                deletesize.labels(**deviceinfo[name]).set(delete_size_kilobytes)
+                deletekbs.labels(**deviceinfo[name]).set(delete_kilobytes_per_second)
+                deletems.labels(**deviceinfo[name]).set(miliseconds_per_delete)
 
-            otherops.labels(**deviceinfo[name]).set(other_operations_per_second)
-            otherms.labels(**deviceinfo[name]).set(miliseconds_per_other)
+                otherops.labels(**deviceinfo[name]).set(other_operations_per_second)
+                otherms.labels(**deviceinfo[name]).set(miliseconds_per_other)
 
-            busy.labels(**deviceinfo[name]).set(percent_busy)
+                busy.labels(**deviceinfo[name]).set(percent_busy)
 
 
 # define metrics
