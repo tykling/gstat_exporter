@@ -1,6 +1,14 @@
 from prometheus_client import start_http_server, Gauge  # type: ignore
 from subprocess import Popen, PIPE
 from typing import Dict
+from importlib.metadata import PackageNotFoundError, version
+
+# get version
+try:
+    __version__ = version("gstat_exporter")
+except PackageNotFoundError:
+    # package is not installed, version unknown
+    __version__ = "0.0.0"
 
 
 def get_deviceinfo(name: str) -> Dict[str, str]:
