@@ -10,6 +10,18 @@ except PackageNotFoundError:
     # package is not installed, version unknown
     __version__ = "0.0.0"
 
+labels: list[str] = [
+    "name",
+    "descr",
+    "mediasize",
+    "sectorsize",
+    "lunid",
+    "ident",
+    "rotationrate",
+    "fwsectors",
+    "fwheads",
+]
+
 
 def get_deviceinfo(name: str) -> Dict[str, str]:
     """
@@ -102,25 +114,14 @@ def process_request() -> None:
                     # skip header line
                     continue
 
-                if name not in deviceinfo:
-                    # this is the first time we see this GEOM
-                    deviceinfo[name] = {}
-                    # we always need a value for all labels
-                    for key in [
-                        "name",
-                        "descr",
-                        "mediasize",
-                        "sectorsize",
-                        "lunid",
-                        "ident",
-                        "rotationrate",
-                        "fwsectors",
-                        "fwheads",
-                    ]:
-                        deviceinfo[name][key] = ""
-                    # get real info from the device if it is class DISK
-                    deviceinfo[name].update(get_deviceinfo(name))
-
+            if name not in deviceinfo:
+                # this is the first time we see this GEOM
+                deviceinfo[name] = {}
+                # we always need a value for all labels
+                for key in labels:
+                    deviceinfo[name][key] = ""
+                # get real info from the device if it is class DISK
+                deviceinfo[name].update(get_deviceinfo(name))
                 deviceinfo[name].update({"name": name})
 
                 # up is always.. up
@@ -158,262 +159,92 @@ up = Gauge(
 queue = Gauge(
     "gstat_queue_depth",
     "The queue depth for this GEOM",
-    [
-        "name",
-        "descr",
-        "mediasize",
-        "sectorsize",
-        "lunid",
-        "ident",
-        "rotationrate",
-        "fwsectors",
-        "fwheads",
-    ],
+    labels,
 )
 totalops = Gauge(
     "gstat_total_operations_per_second",
     "The total number of operations/second for this GEOM",
-    [
-        "name",
-        "descr",
-        "mediasize",
-        "sectorsize",
-        "lunid",
-        "ident",
-        "rotationrate",
-        "fwsectors",
-        "fwheads",
-    ],
+    labels,
 )
 
 readops = Gauge(
     "gstat_read_operations_per_second",
     "The number of read operations/second for this GEOM",
-    [
-        "name",
-        "descr",
-        "mediasize",
-        "sectorsize",
-        "lunid",
-        "ident",
-        "rotationrate",
-        "fwsectors",
-        "fwheads",
-    ],
+    labels,
 )
 readsize = Gauge(
     "gstat_read_size_kilobytes",
     "The size in kilobytes of read operations for this GEOM",
-    [
-        "name",
-        "descr",
-        "mediasize",
-        "sectorsize",
-        "lunid",
-        "ident",
-        "rotationrate",
-        "fwsectors",
-        "fwheads",
-    ],
+    labels,
 )
 readkbs = Gauge(
     "gstat_read_kilobytes_per_second",
     "The speed in kilobytes/second of read operations for this GEOM",
-    [
-        "name",
-        "descr",
-        "mediasize",
-        "sectorsize",
-        "lunid",
-        "ident",
-        "rotationrate",
-        "fwsectors",
-        "fwheads",
-    ],
+    labels,
 )
 readms = Gauge(
     "gstat_miliseconds_per_read",
     "The speed in miliseconds/read operation for this GEOM",
-    [
-        "name",
-        "descr",
-        "mediasize",
-        "sectorsize",
-        "lunid",
-        "ident",
-        "rotationrate",
-        "fwsectors",
-        "fwheads",
-    ],
+    labels,
 )
 
 writeops = Gauge(
     "gstat_write_operations_per_second",
     "The number of write operations/second for this GEOM",
-    [
-        "name",
-        "descr",
-        "mediasize",
-        "sectorsize",
-        "lunid",
-        "ident",
-        "rotationrate",
-        "fwsectors",
-        "fwheads",
-    ],
+    labels,
 )
 writesize = Gauge(
     "gstat_write_size_kilobytes",
     "The size in kilobytes of write operations for this GEOM",
-    [
-        "name",
-        "descr",
-        "mediasize",
-        "sectorsize",
-        "lunid",
-        "ident",
-        "rotationrate",
-        "fwsectors",
-        "fwheads",
-    ],
+    labels,
 )
 writekbs = Gauge(
     "gstat_write_kilobytes_per_second",
     "The speed in kilobytes/second of write operations for this GEOM",
-    [
-        "name",
-        "descr",
-        "mediasize",
-        "sectorsize",
-        "lunid",
-        "ident",
-        "rotationrate",
-        "fwsectors",
-        "fwheads",
-    ],
+    labels,
 )
 writems = Gauge(
     "gstat_miliseconds_per_write",
     "The speed in miliseconds/write operation for this GEOM",
-    [
-        "name",
-        "descr",
-        "mediasize",
-        "sectorsize",
-        "lunid",
-        "ident",
-        "rotationrate",
-        "fwsectors",
-        "fwheads",
-    ],
+    labels,
 )
 
 deleteops = Gauge(
     "gstat_delete_operations_per_second",
     "The number of delete operations/second for this GEOM",
-    [
-        "name",
-        "descr",
-        "mediasize",
-        "sectorsize",
-        "lunid",
-        "ident",
-        "rotationrate",
-        "fwsectors",
-        "fwheads",
-    ],
+    labels,
 )
 deletesize = Gauge(
     "gstat_delete_size_kilobytes",
     "The size in kilobytes of delete operations for this GEOM",
-    [
-        "name",
-        "descr",
-        "mediasize",
-        "sectorsize",
-        "lunid",
-        "ident",
-        "rotationrate",
-        "fwsectors",
-        "fwheads",
-    ],
+    labels,
 )
 deletekbs = Gauge(
     "gstat_delete_kilobytes_per_second",
     "The speed in kilobytes/second of delete operations for this GEOM",
-    [
-        "name",
-        "descr",
-        "mediasize",
-        "sectorsize",
-        "lunid",
-        "ident",
-        "rotationrate",
-        "fwsectors",
-        "fwheads",
-    ],
+    labels,
 )
 deletems = Gauge(
     "gstat_miliseconds_per_delete",
     "The speed in miliseconds/delete operation for this GEOM",
-    [
-        "name",
-        "descr",
-        "mediasize",
-        "sectorsize",
-        "lunid",
-        "ident",
-        "rotationrate",
-        "fwsectors",
-        "fwheads",
-    ],
+    labels,
 )
 
 otherops = Gauge(
     "gstat_other_operations_per_second",
     "The number of other operations (BIO_FLUSH)/second for this GEOM",
-    [
-        "name",
-        "descr",
-        "mediasize",
-        "sectorsize",
-        "lunid",
-        "ident",
-        "rotationrate",
-        "fwsectors",
-        "fwheads",
-    ],
+    labels,
 )
 otherms = Gauge(
     "gstat_miliseconds_per_other",
     "The speed in miliseconds/other operation (BIO_FLUSH) for this GEOM",
-    [
-        "name",
-        "descr",
-        "mediasize",
-        "sectorsize",
-        "lunid",
-        "ident",
-        "rotationrate",
-        "fwsectors",
-        "fwheads",
-    ],
+    labels,
 )
 
 busy = Gauge(
     "gstat_percent_busy",
     "The percent of the time this GEOM is busy",
-    [
-        "name",
-        "descr",
-        "mediasize",
-        "sectorsize",
-        "lunid",
-        "ident",
-        "rotationrate",
-        "fwsectors",
-        "fwheads",
-    ],
+    labels,
 )
 
 start_http_server(9248)
