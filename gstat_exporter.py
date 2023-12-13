@@ -248,30 +248,6 @@ class GstatExporter:
                     timestamp.split(".")[0], "%Y-%m-%d %H:%M:%S"
                 )
 
-                # check for removed GEOMs
-                now = datetime.datetime.now()
-                if (now - self.lastcheck).seconds > 60:
-                    logging.debug("Running periodic check for removed devices...")
-                    # enough time has passed since the last check
-                    # loop over devices and check timestamp for each
-                    remove = []
-                    for name in self.deviceinfo.keys():
-                        delta = (now - self.timestamps[name]).seconds
-                        if delta > 60:
-                            remove.append(name)
-                    # loop over GEOMs gstat stopped giving data for and remove them
-                    for name in remove:
-                        # it has been too long since we have seen this device, remove it
-                        logging.info(
-                            f"It has been {delta} seconds since gstat last reported data for GEOM {name} - removing metrics"
-                        )
-                        for metric in self.metrics.keys():
-                            if metric == "up":
-                                continue
-                            self.metrics[metric].remove(*self.deviceinfo[name].values())
-                        del self.deviceinfo[name]
-                    self.lastcheck = datetime.datetime.now()
-
                 # up is always.. up
                 self.metrics["up"].set(1)
 
@@ -327,6 +303,30 @@ class GstatExporter:
                 )
 
                 self.metrics["busy"].labels(**self.deviceinfo[name]).set(percent_busy)
+
+                # check for removed GEOMs
+                now = datetime.datetime.now()
+                if (now - self.lastcheck).seconds > 60:
+                    logging.debug("Running periodic check for removed devices...")
+                    # enough time has passed since the last check
+                    # loop over devices and check timestamp for each
+                    remove = []
+                    for name in self.deviceinfo.keys():
+                        delta = (now - self.timestamps[name]).seconds
+                        if delta > 60:
+                            remove.append(name)
+                    # loop over GEOMs gstat stopped giving data for and remove them
+                    for name in remove:
+                        # it has been too long since we have seen this device, remove it
+                        logging.info(
+                            f"It has been {delta} seconds since gstat last reported data for GEOM {name} - removing metrics"
+                        )
+                        for metric in self.metrics.keys():
+                            if metric == "up":
+                                continue
+                            self.metrics[metric].remove(*self.deviceinfo[name].values())
+                        del self.deviceinfo[name]
+                    self.lastcheck = datetime.datetime.now()
 
 
 def main() -> None:
