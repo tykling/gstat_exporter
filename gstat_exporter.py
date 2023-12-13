@@ -315,14 +315,15 @@ class GstatExporter:
                         delta = (now - self.timestamps[name]).seconds
                         if delta > 60:
                             remove.append(name)
+                            logging.info(
+                                f"It has been {delta} seconds since gstat last reported data for GEOM {name} - removing metrics"
+                            )
                     # loop over GEOMs gstat stopped giving data for and remove them
                     for name in remove:
                         # it has been too long since we have seen this device, remove it
-                        logging.info(
-                            f"It has been {delta} seconds since gstat last reported data for GEOM {name} - removing metrics"
-                        )
                         for metric in self.metrics.keys():
                             if metric == "up":
+                                # skip the up metric
                                 continue
                             self.metrics[metric].remove(*self.deviceinfo[name].values())
                         del self.deviceinfo[name]
