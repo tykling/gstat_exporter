@@ -11,10 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added argparse and commandline arguments -p and -l to make listen ip and listen port configurable
 - Added feature to remove devices when they disappear from the system
+- Added -d / --debug flag to enable debug mode
 
 ### Changed
 - Replace black + flake8 linters with ruff
 - Refactor code into a GstatExporter class
+- Made the gstat sleep period configurable with -s / --sleep
 
 
 ## [v0.1.0] - 2023-12-13
