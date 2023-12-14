@@ -13,15 +13,13 @@ except PackageNotFoundError:
     # package is not installed, version unknown
     __version__ = "0.0.0"
 
-logging.info(f"Starting gstat_exporter v{__version__}")
-
-
 class GstatExporter:
-    def __init__(self, interval: int = 30, grace: int = 30) -> None:
+    def __init__(self, interval: int = 30, grace: int = 30, sleep: int = 15) -> None:
         """Define metrics and other neccesary variables."""
-        # save interval and grace
+        # save interval, grace, and sleep
         self.interval = interval
         self.grace = grace
+        self.sleep = sleep
 
         # save the version as a class attribute
         self.__version__ = __version__
@@ -204,9 +202,9 @@ class GstatExporter:
         """
         Run gstat in a loop and update stats per line
         """
-        logging.debug("Running 'gstat -pdosCI 5s' (will loop forever)...")
+        logging.debug(f"Running 'gstat -pdosCI {self.sleep}s' (will loop forever)...")
         with Popen(
-            ["gstat", "-pdosCI", "5s"], stdout=PIPE, bufsize=1, universal_newlines=True
+            ["gstat", "-pdosCI", f"{self.sleep}s"], stdout=PIPE, bufsize=1, universal_newlines=True
         ) as p:
             # loop over lines in the output
             for line in p.stdout:  # type: ignore
@@ -323,9 +321,9 @@ class GstatExporter:
                                 f"It has been {self.grace} seconds since gstat last reported data for GEOM {name} - removing metrics"
                             )
 
-                    # loop over GEOMs gstat stopped giving data for and remove them
+                    # loop over the GEOMs for which gstat stopped giving data and remove them
                     for name in remove:
-                        # it has been too long since we have seen this device, remove it
+                        # it has been too long since we have seen this GEOM, remove it
                         for metric in self.metrics.keys():
                             if metric == "up":
                                 # skip the up metric
@@ -338,6 +336,7 @@ class GstatExporter:
 def main() -> None:
     """Run the main function."""
     parser = argparse.ArgumentParser()
+
     parser.add_argument(
         "-g",
         "--grace",
@@ -366,13 +365,32 @@ def main() -> None:
         help="Portnumber. Defaults to 9248.",
         default=9248,
     )
+    parser.add_argument(
+        "-s",
+        "--sleep",
+        type=int,
+        help="How long should gstat sleep between reporting data, in seconds. Set this to the same as your Prometheus scrape interval. Defaults to 15.",
+        default=15,
+    )
+
+    parser.add_argument(
+        "-d",
+        "--debug",
+        action="store_const",
+        dest="loglevel",
+        const="DEBUG",
+        help="Debug mode.",
+        default="INFO",
+    )
+
     args = parser.parse_args()
-    logging.info(f"Starting listener on address '{args.listen_ip}' port '{args.port}'")
+    logging.basicConfig(level=args.loglevel)
+    logging.info(f"Starting gstat_exporter v{__version__} - logging at level {args.loglevel}")
+    logging.info(f"Starting HTTP listener on address '{args.listen_ip}' port '{args.port}'")
     start_http_server(addr=args.listen_ip, port=args.port)
-    exporter = GstatExporter(interval=args.interval, grace=args.grace)
+    exporter = GstatExporter(interval=args.interval, grace=args.grace, sleep=args.sleep)
     while True:
         exporter.run_gstat_forever()
-
 
 if __name__ == "__main__":
     main()
