@@ -384,7 +384,7 @@ def main() -> None:
     )
 
     args = parser.parse_args()
-    logging.basicConfig(level=args.loglevel, datefmt="%Y-%m-%d %H-%M-%S %z", format="%(asctime)s - %(module)s - %(levelname)s - %(message)s")
+    logging.basicConfig(level=args.loglevel, datefmt="%Y-%m-%d %H:%M:%S %z", format="%(asctime)s - %(module)s - %(levelname)s - %(message)s")
     logging.info(f"Starting gstat_exporter v{__version__} - logging at level {args.loglevel}")
     logging.info(f"Starting HTTP listener on address '{args.listen_ip}' port '{args.port}'")
     start_http_server(addr=args.listen_ip, port=args.port)
